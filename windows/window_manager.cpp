@@ -732,26 +732,27 @@ void WindowManager::SetBounds(const flutter::EncodableMap& args) {
   auto* null_or_width = std::get_if<double>(ValueOrNull(args, "width"));
   auto* null_or_height = std::get_if<double>(ValueOrNull(args, "height"));
 
-  int x = 0;
-  int y = 0;
-  int width = 0;
-  int height = 0;
-  UINT uFlags = NULL;
+  RECT rect;
+  GetWindowRect(hwnd, &rect);
+  int x = rect.left;
+  int y = rect.top;
+  int width = rect.right - rect.left;
+  int height = rect.bottom - rect.top;
+
+  UINT uFlags = 0;
 
   if (null_or_x != nullptr && null_or_y != nullptr) {
     x = static_cast<int>(*null_or_x * devicePixelRatio);
     y = static_cast<int>(*null_or_y * devicePixelRatio);
+  } else {
+    uFlags |= SWP_NOMOVE;
   }
+
   if (null_or_width != nullptr && null_or_height != nullptr) {
     width = static_cast<int>(*null_or_width * devicePixelRatio);
     height = static_cast<int>(*null_or_height * devicePixelRatio);
-  }
-
-  if (null_or_x == nullptr || null_or_y == nullptr) {
-    uFlags = SWP_NOMOVE;
-  }
-  if (null_or_width == nullptr || null_or_height == nullptr) {
-    uFlags = SWP_NOSIZE;
+  } else {
+    uFlags |= SWP_NOSIZE;
   }
 
   SetWindowPos(hwnd, HWND_TOP, x, y, width, height, uFlags);
